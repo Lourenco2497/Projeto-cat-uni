@@ -25,3 +25,16 @@ dist-ssr
 
 # AGENTS
 .agent/
+
+# Graphify
+graphify-out/
+.graphify-out/
+
+# Agents
+.agents/
+
+# Tasks
+tasks/
+
+# Skill-lock
+skills-lock.json

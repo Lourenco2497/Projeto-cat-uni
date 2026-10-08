@@ -1,4 +1,4 @@
-import { Exercise } from '../types';
+﻿import { Exercise } from '../types';
 
 /**
  * Catálogo de Exercícios Ilustrativos para Fisioterapia Obstétrica
@@ -27,7 +27,7 @@ export const EXERCISES: Exercise[] = [
     breathingFocus: 'Inspiração suave profunda 360°; expiração lenta sem forçar a contração.',
     safetyCaution: 'Evita suster a respiração (manobra de Valsalva). Se sentires tonturas, volta à respiração espontânea.',
     illustrationKey: 'breathing',
-    videoDemoUrl: 'https://placehold.co/600x400/FBE4E2/4A154B?text=Video+Demonstrativo+Respiracao'
+    videoDemoUrl: ''
   },
   {
     id: 'ex-2',
@@ -50,7 +50,7 @@ export const EXERCISES: Exercise[] = [
     breathingFocus: 'Expira ao contrair; inspira ao relaxar totalmente o períneo.',
     safetyCaution: 'Nunca faças este exercício ao urinar na sanita. Foca no relaxamento completo entre repetições.',
     illustrationKey: 'pelvic_floor',
-    videoDemoUrl: 'https://placehold.co/600x400/FBE4E2/4A154B?text=Video+Demonstrativo+Pavimento+Pelvico'
+    videoDemoUrl: ''
   },
   {
     id: 'ex-3',
@@ -73,7 +73,7 @@ export const EXERCISES: Exercise[] = [
     breathingFocus: 'Respiração rítmica e calma ao longo de todo o movimento.',
     safetyCaution: 'Certifica-te de que a bola é antiderrapante e que o chão não é escorregadio. Faz perto de um apoio fixo se necessário.',
     illustrationKey: 'pilates_ball',
-    videoDemoUrl: 'https://placehold.co/600x400/FBE4E2/4A154B?text=Video+Demonstrativo+Bola+Pilates'
+    videoDemoUrl: ''
   },
   {
     id: 'ex-4',
@@ -96,7 +96,7 @@ export const EXERCISES: Exercise[] = [
     breathingFocus: 'Expira ao arredondar para cima; inspira ao regressar à posição neutra.',
     safetyCaution: 'Não deixes a barriga cair excessivamente em hiperextensão lombar no retorno.',
     illustrationKey: 'cat_camel',
-    videoDemoUrl: 'https://placehold.co/600x400/FBE4E2/4A154B?text=Video+Demonstrativo+Gato+Camelo'
+    videoDemoUrl: ''
   },
   {
     id: 'ex-5',
@@ -119,7 +119,7 @@ export const EXERCISES: Exercise[] = [
     breathingFocus: 'Expira ao subir; inspira ao descer controladamente.',
     safetyCaution: 'Se sentires compressão na veia cava (tonturas, palpitações ou falta de ar), vira-te de imediato para o lado esquerdo.',
     illustrationKey: 'glute_bridge',
-    videoDemoUrl: 'https://placehold.co/600x400/FBE4E2/4A154B?text=Video+Demonstrativo+Ponte+Glutea'
+    videoDemoUrl: ''
   },
   {
     id: 'ex-6',
@@ -142,7 +142,7 @@ export const EXERCISES: Exercise[] = [
     breathingFocus: 'Inspira na descida; expira com força suave na subida.',
     safetyCaution: 'Em caso de dor pélvica anterior (disfunção da sínfise púbica), reduz o afastamento dos pés e a amplitude de descida.',
     illustrationKey: 'supported_squat',
-    videoDemoUrl: 'https://placehold.co/600x400/FBE4E2/4A154B?text=Video+Demonstrativo+Agachamento'
+    videoDemoUrl: ''
   },
   {
     id: 'ex-7',
@@ -165,7 +165,7 @@ export const EXERCISES: Exercise[] = [
     breathingFocus: 'Respiração nasal constante e ritmada com os passos.',
     safetyCaution: 'Evita caminhar nas horas de maior calor. Se sentires fadiga ou contrações, senta-te e descansa.',
     illustrationKey: 'walking',
-    videoDemoUrl: 'https://placehold.co/600x400/FBE4E2/4A154B?text=Video+Demonstrativo+Caminhada'
+    videoDemoUrl: ''
   },
   {
     id: 'ex-8',
@@ -188,9 +188,10 @@ export const EXERCISES: Exercise[] = [
     breathingFocus: 'Inspira expandindo o lado que está a ser alongado; expira descontraindo.',
     safetyCaution: 'Não forces o movimento de inclinação lateral nem faças rotações bruscas.',
     illustrationKey: 'chest_stretch',
-    videoDemoUrl: 'https://placehold.co/600x400/FBE4E2/4A154B?text=Video+Demonstrativo+Alongamento'
+    videoDemoUrl: ''
   }
 ];
 
 export const SAFETY_DISCLAIMER_TEXT = 
   "Este protótipo não substitui aconselhamento profissional. Pára e contacta o teu médico se tiveres dor intensa, perdas de sangue ou líquido, contrações regulares, tonturas ou falta de ar.";
+

@@ -1,256 +1,102 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { UserProfile, WorkoutLog, ChatMessage } from '../types';
+﻿import { useEffect, useRef, useState } from 'react';
+import type { ReactNode } from 'react';
+import type { UserProfile, WorkoutLog } from '../types';
+import { AppContext } from './useApp';
 import { DEFAULT_DEMO_USER, generateDemoWorkoutLogs } from '../data/demoData';
-import { INITIAL_CHAT_MESSAGES, SIMULATED_REPLIES } from '../data/chatData';
-import { EXERCISES } from '../data/exercises';
-import { generatePersonalizedPlan } from '../lib/planGenerator';
+import { CHAT_ROOMS, INITIAL_CHAT_MESSAGES, SIMULATED_REPLIES } from '../data/chatData';
+import { ARTICLES } from '../data/articles';
 
-interface AppContextType {
-  user: UserProfile;
-  hasCompletedOnboarding: boolean;
-  workoutLogs: Record<string, WorkoutLog>;
-  chatMessages: Record<string, ChatMessage[]>;
-  favoriteArticleIds: string[];
-  selectedDateStr: string;
-  todayDateStr: string;
-  activePlan: ReturnType<typeof generatePersonalizedPlan>;
-  setSelectedDateStr: (date: string) => void;
-  saveWorkoutLog: (log: WorkoutLog) => void;
-  toggleCompleteWorkout: (dateStr: string, exerciseId: string) => void;
-  sendChatMessage: (roomId: string, text: string) => void;
-  toggleFavoriteArticle: (articleId: string) => void;
-  completeOnboarding: (profile: UserProfile) => void;
-  resetDemoData: () => void;
-  logoutToAuth: () => void;
-  getExerciseForDate: (dateStr: string) => typeof EXERCISES[0];
+import { generatePersonalizedPlan, getExerciseForDay } from '../lib/planGenerator';
+import { todayKey, validDate } from '../lib/dates';
+import { emptyDemo, loadDemo, normalizeProfile, normalizeLog, isAlarm, STORAGE_KEY } from '../lib/persistence';
+import type { DemoData } from '../lib/persistence';
+
+export function AppProvider({ children }: { children: ReactNode }) {
+  const [initial] = useState(() => {
+    try { return loadDemo(window.localStorage); } catch { return { data: emptyDemo(), notice: 'Armazenamento indisponível. Esta sessão ficará apenas em memória.' }; }
+  });
+  const [data, setData] = useState(initial.data);
+  const state = useRef(initial.data);
+  const [storageNotice, setStorageNotice] = useState(initial.notice);
+  const [todayDateStr, setToday] = useState(todayKey);
+  const [selectedDateStr, setSelectedDateStr] = useState(todayDateStr);
+  const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  useEffect(() => {
+    const refresh = () => setToday(todayKey());
+    const interval = setInterval(refresh, 60000);
+    window.addEventListener('focus', refresh);
+    return () => { clearInterval(interval); window.removeEventListener('focus', refresh); timers.current.forEach(clearTimeout); };
+  }, []);
+  const user = data.user || DEFAULT_DEMO_USER;
+  const activePlan = generatePersonalizedPlan(user);
+  const commit = (next: DemoData) => {
+    state.current = next; setData(next);
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(next)); setStorageNotice(''); }
+    catch { setStorageNotice('Não foi possível guardar no navegador. As alterações desta sessão estão apenas em memória.'); }
+  };
+  const clearReplies = () => { timers.current.forEach(clearTimeout); timers.current = []; };
+  const getExerciseForDate = (date: string) => getExerciseForDay(activePlan, date, user.trimester, data.workoutLogs[date]?.exerciseId);
+  const saveWorkoutLog = (log: WorkoutLog) => {
+    const validated = normalizeLog(log, log.date);
+    if (!validated || log.date > todayDateStr) return false;
+    const profile = state.current.user || DEFAULT_DEMO_USER;
+    const previous = state.current.workoutLogs[log.date];
+    const exercise = getExerciseForDay(generatePersonalizedPlan(profile), log.date, profile.trimester, previous?.exerciseId);
+    const preservingCompletion = previous?.completed && previous.exerciseId === validated.exerciseId;
+    if (validated.completed && (isAlarm(validated) || !preservingCompletion && exercise?.id !== validated.exerciseId)) return false;
+    commit({ ...state.current, workoutLogs: { ...state.current.workoutLogs, [log.date]: validated } });
+    return true;
+  };
+  const toggleCompleteWorkout = (date: string, exerciseId: string) => {
+    const current = state.current.workoutLogs[date];
+    if (date > todayDateStr || !getExerciseForDate(date) || (current && isAlarm(current))) return;
+    saveWorkoutLog({ date, exerciseId, completed: !current?.completed, symptoms: current?.symptoms || [], painLevel: current?.painLevel ?? null,
+      difficultyLevel: current?.difficultyLevel ?? null, contractions: current?.contractions || 'nenhuma',
+      actualReps: current?.actualReps ?? null, actualSets: current?.actualSets ?? null, notes: current?.notes, loggedAt: new Date().toISOString() });
+  };
+  const resetDemoData = () => {
+    clearReplies();
+    commit({ version: 2, user: { ...DEFAULT_DEMO_USER }, isDemoSession: true, hasCompletedOnboarding: true, workoutLogs: generateDemoWorkoutLogs(),
+      chatMessages: structuredClone(INITIAL_CHAT_MESSAGES), favoriteArticleIds: ['art-1', 'art-3'] });
+    setSelectedDateStr(todayKey());
+  };
+  const startDemoProfile = (name: string, email: string) => {
+    const profile = normalizeProfile({ ...DEFAULT_DEMO_USER, name, email, complaints: [], clinicalFlags: [], goals: [], safetyScreening: 'unknown',
+      pregnancyType: 'unknown', fetalPresentation: 'unknown', perinealAwareness: 'unknown' });
+    if (!profile) return false;
+    clearReplies();
+    commit({ ...emptyDemo(), user: profile, isDemoSession: true });
+    setSelectedDateStr(todayKey());
+    return true;
+  };
+  const completeOnboarding = (profile: UserProfile) => {
+    const normalized = normalizeProfile(profile);
+    if (!normalized) return false;
+    clearReplies(); commit({ ...state.current, user: normalized, hasCompletedOnboarding: true }); return true;
+  };
+  const sendChatMessage = (roomId: string, text: string) => {
+    const clean = text.trim();
+    if (!state.current.isDemoSession || !CHAT_ROOMS.some(r => r.id === roomId) || !clean || clean.length > 1000) return;
+    const profile = state.current.user!;
+    const message = { id: crypto.randomUUID(), roomId, senderName: profile.name, senderWeek: profile.week, avatarSeed: 'User', text: clean, timestamp: 'Agora', isCurrentUser: true };
+    commit({ ...state.current, chatMessages: { ...state.current.chatMessages, [roomId]: [...(state.current.chatMessages[roomId] || []), message].slice(-200) } });
+    const timer = setTimeout(() => {
+      timers.current = timers.current.filter(t => t !== timer);
+      const reply = { ...message, id: crypto.randomUUID(), senderName: 'Cláudia · exemplo', avatarSeed: 'Claudia', text: SIMULATED_REPLIES[Math.floor(Math.random() * SIMULATED_REPLIES.length)], isCurrentUser: false };
+      commit({ ...state.current, chatMessages: { ...state.current.chatMessages, [roomId]: [...(state.current.chatMessages[roomId] || []), reply].slice(-200) } });
+    }, 1500);
+    timers.current.push(timer);
+  };
+  return <AppContext.Provider value={{
+    user, hasSavedProfile: !!data.user, isDemoSession: data.isDemoSession, hasCompletedOnboarding: data.hasCompletedOnboarding,
+    workoutLogs: data.workoutLogs, chatMessages: data.chatMessages, favoriteArticleIds: data.favoriteArticleIds, storageNotice,
+    selectedDateStr, todayDateStr, activePlan,
+    setSelectedDateStr: date => { if (validDate(date)) setSelectedDateStr(date); },
+    startDemoProfile, resumeDemo: () => { if (state.current.user) commit({ ...state.current, isDemoSession: true }); },
+    saveWorkoutLog, toggleCompleteWorkout, sendChatMessage,
+    toggleFavoriteArticle: id => { if (ARTICLES.some(a => a.id === id)) commit({ ...state.current, favoriteArticleIds: state.current.favoriteArticleIds.includes(id) ? state.current.favoriteArticleIds.filter(a => a !== id) : [...state.current.favoriteArticleIds, id] }); },
+    completeOnboarding, resetDemoData, logoutToAuth: () => { clearReplies(); commit({ ...state.current, isDemoSession: false }); }, getExerciseForDate,
+  }}>{children}</AppContext.Provider>;
 }
 
-const STORAGE_KEY = 'catuni_maternal_app_v1';
 
-const AppContext = createContext<AppContextType | undefined>(undefined);
-
-export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const getTodayStr = () => new Date().toISOString().split('T')[0];
-  const todayDateStr = getTodayStr();
-
-  // Inicializa estado com persistência em localStorage ou dados de demonstração
-  const [user, setUser] = useState<UserProfile>(() => {
-    const saved = localStorage.getItem(`${STORAGE_KEY}_user`);
-    if (saved) {
-      try { return JSON.parse(saved); } catch (e) { /* fallback */ }
-    }
-    return DEFAULT_DEMO_USER;
-  });
-
-  const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState<boolean>(() => {
-    const saved = localStorage.getItem(`${STORAGE_KEY}_onboarded`);
-    return saved !== null ? saved === 'true' : true; // Por defeito true para a apresentação abrir já funcional
-  });
-
-  const [workoutLogs, setWorkoutLogs] = useState<Record<string, WorkoutLog>>(() => {
-    const saved = localStorage.getItem(`${STORAGE_KEY}_logs`);
-    if (saved) {
-      try { return JSON.parse(saved); } catch (e) { /* fallback */ }
-    }
-    return generateDemoWorkoutLogs();
-  });
-
-  const [chatMessages, setChatMessages] = useState<Record<string, ChatMessage[]>>(() => {
-    const saved = localStorage.getItem(`${STORAGE_KEY}_chats`);
-    if (saved) {
-      try { return JSON.parse(saved); } catch (e) { /* fallback */ }
-    }
-    return INITIAL_CHAT_MESSAGES;
-  });
-
-  const [favoriteArticleIds, setFavoriteArticleIds] = useState<string[]>(() => {
-    const saved = localStorage.getItem(`${STORAGE_KEY}_favs`);
-    if (saved) {
-      try { return JSON.parse(saved); } catch (e) { /* fallback */ }
-    }
-    return ['art-1', 'art-3'];
-  });
-
-  const [selectedDateStr, setSelectedDateStr] = useState<string>(todayDateStr);
-
-  // Guarda alterações no localStorage
-  useEffect(() => {
-    localStorage.setItem(`${STORAGE_KEY}_user`, JSON.stringify(user));
-  }, [user]);
-
-  useEffect(() => {
-    localStorage.setItem(`${STORAGE_KEY}_onboarded`, String(hasCompletedOnboarding));
-  }, [hasCompletedOnboarding]);
-
-  useEffect(() => {
-    localStorage.setItem(`${STORAGE_KEY}_logs`, JSON.stringify(workoutLogs));
-  }, [workoutLogs]);
-
-  useEffect(() => {
-    localStorage.setItem(`${STORAGE_KEY}_chats`, JSON.stringify(chatMessages));
-  }, [chatMessages]);
-
-  useEffect(() => {
-    localStorage.setItem(`${STORAGE_KEY}_favs`, JSON.stringify(favoriteArticleIds));
-  }, [favoriteArticleIds]);
-
-  // Gera o plano ativo com base no perfil do utilizador
-  const activePlan = generatePersonalizedPlan({
-    week: user.week,
-    isFirstPregnancy: user.isFirstPregnancy,
-    previousActivityLevel: user.previousActivityLevel,
-    complaints: user.complaints,
-    clinicalFlags: user.clinicalFlags,
-    goals: user.goals
-  });
-
-  // Retorna o exercício recomendado para uma data específica
-  const getExerciseForDate = (dateStr: string) => {
-    // Se já houver um registo com exerciseId, usa esse
-    if (workoutLogs[dateStr]?.exerciseId) {
-      const found = EXERCISES.find(e => e.id === workoutLogs[dateStr].exerciseId);
-      if (found) return found;
-    }
-
-    // Caso contrário, busca o exercício do plano para o dia da semana correspondente
-    const dateObj = new Date(dateStr + 'T00:00:00');
-    const dayOfWeek = dateObj.getDay(); // 0 = Dom, 1 = Seg, ...
-    const planDay = activePlan.recommendedDailyExercises.find(d => d.dayOfWeek === dayOfWeek);
-
-    if (planDay) {
-      const ex = EXERCISES.find(e => e.id === planDay.exerciseId);
-      if (ex) return ex;
-    }
-
-    return EXERCISES[0];
-  };
-
-  const saveWorkoutLog = (newLog: WorkoutLog) => {
-    setWorkoutLogs(prev => ({
-      ...prev,
-      [newLog.date]: newLog
-    }));
-  };
-
-  const toggleCompleteWorkout = (dateStr: string, exerciseId: string) => {
-    setWorkoutLogs(prev => {
-      const current = prev[dateStr];
-      const isCurrentlyCompleted = current ? current.completed : false;
-
-      return {
-        ...prev,
-        [dateStr]: {
-          date: dateStr,
-          completed: !isCurrentlyCompleted,
-          exerciseId: exerciseId || (current?.exerciseId || 'ex-1'),
-          symptoms: current?.symptoms || [],
-          painLevel: current?.painLevel ?? 2,
-          difficultyLevel: current?.difficultyLevel ?? 3,
-          contractions: current?.contractions || 'nenhuma',
-          actualReps: current?.actualReps || 10,
-          actualSets: current?.actualSets || 2,
-          notes: current?.notes || 'Exercício concluído com sucesso.',
-          loggedAt: new Date().toISOString()
-        }
-      };
-    });
-  };
-
-  const sendChatMessage = (roomId: string, text: string) => {
-    const newMessage: ChatMessage = {
-      id: `msg-${Date.now()}`,
-      roomId,
-      senderName: user.name || 'Rita',
-      senderWeek: user.week || 24,
-      avatarSeed: 'User',
-      text,
-      timestamp: 'Agora',
-      isCurrentUser: true
-    };
-
-    setChatMessages(prev => ({
-      ...prev,
-      [roomId]: [...(prev[roomId] || []), newMessage]
-    }));
-
-    // Simula uma resposta calorosa e encorajadora da comunidade após 1.5s
-    setTimeout(() => {
-      const randomReply = SIMULATED_REPLIES[Math.floor(Math.random() * SIMULATED_REPLIES.length)];
-      const peerMessage: ChatMessage = {
-        id: `msg-sim-${Date.now()}`,
-        roomId,
-        senderName: 'Cláudia F.',
-        senderWeek: Math.max(12, (user.week || 24) - 2),
-        avatarSeed: 'ClaudiaF',
-        text: randomReply,
-        timestamp: 'Agora mesmo',
-        isCurrentUser: false
-      };
-
-      setChatMessages(current => ({
-        ...current,
-        [roomId]: [...(current[roomId] || []), peerMessage]
-      }));
-    }, 1500);
-  };
-
-  const toggleFavoriteArticle = (articleId: string) => {
-    setFavoriteArticleIds(prev => 
-      prev.includes(articleId) 
-        ? prev.filter(id => id !== articleId)
-        : [...prev, articleId]
-    );
-  };
-
-  const completeOnboarding = (profile: UserProfile) => {
-    setUser(profile);
-    setHasCompletedOnboarding(true);
-  };
-
-  const resetDemoData = () => {
-    setUser(DEFAULT_DEMO_USER);
-    setHasCompletedOnboarding(true);
-    setWorkoutLogs(generateDemoWorkoutLogs());
-    setChatMessages(INITIAL_CHAT_MESSAGES);
-    setFavoriteArticleIds(['art-1', 'art-3']);
-    setSelectedDateStr(todayDateStr);
-  };
-
-  const logoutToAuth = () => {
-    setHasCompletedOnboarding(false);
-  };
-
-  return (
-    <AppContext.Provider
-      value={{
-        user,
-        hasCompletedOnboarding,
-        workoutLogs,
-        chatMessages,
-        favoriteArticleIds,
-        selectedDateStr,
-        todayDateStr,
-        activePlan,
-        setSelectedDateStr,
-        saveWorkoutLog,
-        toggleCompleteWorkout,
-        sendChatMessage,
-        toggleFavoriteArticle,
-        completeOnboarding,
-        resetDemoData,
-        logoutToAuth,
-        getExerciseForDate
-      }}
-    >
-      {children}
-    </AppContext.Provider>
-  );
-};
-
-export const useApp = () => {
-  const context = useContext(AppContext);
-  if (!context) {
-    throw new Error('useApp must be used within an AppProvider');
-  }
-  return context;
-};

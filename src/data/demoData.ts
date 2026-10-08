@@ -1,23 +1,30 @@
-import { UserProfile, WorkoutLog } from '../types';
+﻿import { UserProfile, WorkoutLog } from '../types';
+import { todayKey, addDays } from '../lib/dates';
 
 export const DEFAULT_DEMO_USER: UserProfile = {
   name: 'Rita Henriques',
   email: 'rita.exemplo@catuni.pt',
-  week: 24,
-  trimester: 2,
+  week: 34,
+  gestationalDays: 2,
+  trimester: 3,
+  pregnancyType: 'single',
+  fetalPresentation: 'cephalic',
+  safetyScreening: 'clear',
+  perinealAwareness: 'unknown',
+  previousBirths: 0,
   isFirstPregnancy: true,
   previousActivityLevel: 'moderate',
   complaints: ['dor lombar', 'cansaço', 'pernas pesadas'],
   clinicalFlags: [], // Gravidez sem contraindicações
   goals: ['Aliviar dor lombar e rigidez', 'Fortalecer o pavimento pélvico', 'Manter mobilidade para o parto'],
-  profileType: 'moderado',
-  planId: 'plan-moderado-t2'
+  profileType: 'suave',
+  planId: 'demo-t3'
 };
 
 // Gera 14 dias de histórico com tendência decrescente de dor
 export function generateDemoWorkoutLogs(): Record<string, WorkoutLog> {
   const logs: Record<string, WorkoutLog> = {};
-  const today = new Date();
+  const today = todayKey();
 
   // Dados dos últimos 14 dias (mostra dor a descer de 6 para 2-3)
   const pastDaysData = [
@@ -27,7 +34,7 @@ export function generateDemoWorkoutLogs(): Record<string, WorkoutLog> {
     { offset: 10, exId: 'ex-2', completed: false, pain: 5, diff: 5, symptoms: ['fadiga'], contr: 'nenhuma' as const, reps: 0, sets: 0 },
     { offset: 9, exId: 'ex-7', completed: true, pain: 5, diff: 3, symptoms: ['pernas pesadas'], contr: 'nenhuma' as const, reps: 15, sets: 1 },
     { offset: 8, exId: 'ex-4', completed: true, pain: 4, diff: 4, symptoms: ['dor lombar ligeira'], contr: 'nenhuma' as const, reps: 8, sets: 2 },
-    { offset: 7, exId: 'ex-5', completed: true, pain: 4, diff: 4, symptoms: [], contr: 'nenhuma' as const, reps: 8, sets: 2 },
+    { offset: 7, exId: 'ex-8', completed: true, pain: 4, diff: 4, symptoms: [], contr: 'nenhuma' as const, reps: 8, sets: 2 },
     { offset: 6, exId: 'ex-3', completed: true, pain: 4, diff: 3, symptoms: ['rigidez matinal'], contr: 'nenhuma' as const, reps: 10, sets: 2 },
     { offset: 5, exId: 'ex-1', completed: true, pain: 3, diff: 3, symptoms: [], contr: 'nenhuma' as const, reps: 12, sets: 2 },
     { offset: 4, exId: 'ex-2', completed: true, pain: 3, diff: 3, symptoms: [], contr: 'nenhuma' as const, reps: 8, sets: 2 },
@@ -38,9 +45,7 @@ export function generateDemoWorkoutLogs(): Record<string, WorkoutLog> {
   ];
 
   pastDaysData.forEach(item => {
-    const d = new Date(today);
-    d.setDate(d.getDate() - item.offset);
-    const dateStr = d.toISOString().split('T')[0];
+    const dateStr = addDays(today, -item.offset);
 
     logs[dateStr] = {
       date: dateStr,
@@ -53,9 +58,10 @@ export function generateDemoWorkoutLogs(): Record<string, WorkoutLog> {
       actualReps: item.reps,
       actualSets: item.sets,
       notes: item.completed ? 'Treino realizado conforme recomendação.' : 'Dia de descanso.',
-      loggedAt: new Date(d.getTime() + 10 * 3600 * 1000).toISOString()
+      loggedAt: `${dateStr}T10:00:00Z`
     };
   });
 
   return logs;
 }
+

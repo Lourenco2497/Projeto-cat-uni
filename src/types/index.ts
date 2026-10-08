@@ -10,6 +10,12 @@ export interface UserProfile {
   name: string;
   email: string;
   week: number; // Semanas de gestação (ex: 24)
+  gestationalDays?: number;
+  pregnancyType?: 'single' | 'twins' | 'unknown';
+  fetalPresentation?: 'cephalic' | 'breech' | 'transverse' | 'unknown';
+  safetyScreening?: 'clear' | 'flagged' | 'unknown';
+  perinealAwareness?: 'yes' | 'no' | 'unknown';
+  previousBirths?: number;
   trimester: Trimester;
   isFirstPregnancy: boolean;
   previousActivityLevel: ActivityLevel;
@@ -43,11 +49,11 @@ export interface WorkoutLog {
   completed: boolean;
   exerciseId: string;
   symptoms: string[];
-  painLevel: number; // 0 a 10
-  difficultyLevel: number; // 0 a 10
+  painLevel: number | null; // null = não registado
+  difficultyLevel: number | null;
   contractions: 'nenhuma' | 'ocasionais' | 'regulares';
-  actualReps: number;
-  actualSets: number;
+  actualReps: number | null;
+  actualSets: number | null;
   notes?: string;
   loggedAt: string;
 }
@@ -65,6 +71,7 @@ export interface Article {
   conclusion: string;
   practicalTips: string[];
   imageUrl: string;
+  citationUrl?: string;
 }
 
 export interface Testimonial {
