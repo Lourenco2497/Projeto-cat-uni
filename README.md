@@ -23,6 +23,14 @@ npm run preview
 
 O alojamento estático deve encaminhar rotas como `/calendar` para `index.html`. A implantação não faz parte desta entrega.
 
+## Direção visual
+
+O skill local `apple-design` orienta a revisão visual: corais e pêssegos mais luminosos, tipografia do sistema com maior hierarquia, navegação flutuante e cabeçalho translúcido. Os cartões de conteúdo continuam sólidos para preservar a leitura; os materiais têm alternativas opacas para transparência reduzida e contraste aumentado.
+
+Botões e navegação respondem à pressão sem atrasar a ação. A conclusão tem estado visual e `aria-pressed`; o modo de movimento reduzido elimina a escala. As janelas usam o diálogo nativo, apresentado junto à base no telemóvel. Não foram adicionadas dependências ou gestos personalizados.
+
+A revisão visual passou build, typecheck, lint e os 24 testes existentes. Cinco pares principais de texto/fundo passaram 4,5:1 no cálculo de contraste. A inspeção desta revisão no browser está pendente: o runtime de controlo falhou ao iniciar nesta sessão. As verificações de browser descritas abaixo correspondem à versão anterior desta revisão visual.
+
 ## Acesso e persistência
 
 A decisão aprovada foi acesso de demonstração com persistência local. Não há verificação de identidade, passwords, OAuth, Firebase ou backend próprio. Os botões permitem criar um perfil fictício, retomar o perfil guardado ou explorar o exemplo de 34 semanas + 2 dias.
