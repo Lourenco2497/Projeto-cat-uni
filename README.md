@@ -21,7 +21,7 @@ npm run build
 npm run preview
 ```
 
-O alojamento estático deve encaminhar rotas como `/calendar` para `index.html`. A implantação não faz parte desta entrega.
+O alojamento estático deve encaminhar rotas como `/calendar` para `index.html`. O ficheiro `vercel.json` configura esse fallback na Vercel; depois de publicar alterações à configuração, é necessário um novo deployment. Verifica abrindo `/calendar` diretamente e atualizando a página.
 
 ## Direção visual
 
