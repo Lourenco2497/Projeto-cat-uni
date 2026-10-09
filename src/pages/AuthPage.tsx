@@ -21,7 +21,7 @@ export function AuthPage() {
     else enter(action);
   }
   return <main className="auth-shell"><div className="auth-layout">
-    <section className="auth-intro"><div className="wordmark">catuni materna<span>UM POUCO DE MOVIMENTO. UM MOMENTO PARA TI.</span></div>
+    <section className="auth-intro"><div className="wordmark">Apoio à Gravidez<span>UM POUCO DE MOVIMENTO. UM MOMENTO PARA TI.</span></div>
       <h1>O teu corpo muda.<br /><span style={{ color: '#8d6078' }}>O cuidado acompanha.</span></h1>
       <p className="muted">Um espaço para conheceres o teu corpo, registares como te sentes e preparares esta nova etapa, ao teu ritmo.</p>
       <div className="auth-illustration"><ExerciseIllustration type="pilates_ball" /></div>
@@ -42,4 +42,3 @@ export function AuthPage() {
     </section>
   </div>{pending && <Dialog title="Substituir o perfil guardado?" onClose={() => setPending(null)}><div className="stack"><p>O perfil, os registos, os favoritos e as conversas atuais serão substituídos pelos dados da nova demonstração.</p><button className="secondary full" onClick={() => setPending(null)}>Manter o perfil atual</button><button className="primary full" onClick={() => enter(pending)}>Substituir e continuar</button></div></Dialog>}</main>;
 }
-

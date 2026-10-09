@@ -3,7 +3,7 @@ import { todayKey, addDays } from '../lib/dates';
 
 export const DEFAULT_DEMO_USER: UserProfile = {
   name: 'Rita Henriques',
-  email: 'rita.exemplo@catuni.pt',
+  email: 'rita@exemplo.pt',
   week: 34,
   gestationalDays: 2,
   trimester: 3,
@@ -64,4 +64,3 @@ export function generateDemoWorkoutLogs(): Record<string, WorkoutLog> {
 
   return logs;
 }
-

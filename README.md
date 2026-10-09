@@ -1,4 +1,4 @@
-﻿# CatUni Materna
+﻿# Apoio à Gravidez
 
 Aplicação web mobile-first para uma apresentação académica de acompanhamento na gravidez. Interface em português de Portugal, com cartões suaves, calendário, registo diário e uma comunidade fictícia. O brainstorming informa o produto; as decisões aprovadas pelo utilizador definem a implementação.
 
@@ -106,7 +106,3 @@ Limites da verificação: zoom nativo a 200%, iOS/Safari físico, teclado móvel
 - Decisão sobre exames, contas reais, sincronização, alojamento e operação.
 
 Ponytail full e find-skills orientaram o trabalho. Foram reutilizados os skills disponíveis de frontend, segurança, implementação incremental, testes e browser; o skill PDF instalado no workspace serviu para rever o briefing. O plano aprovado e a lista de execução estão em `tasks/` (pasta local ignorada pelo Git).
-
-
-
-

@@ -15,13 +15,13 @@ export function AppLayout() {
   return <div className="app-shell">
     <a className="skip-link" href="#content">Saltar para o conteúdo</a>
     <aside className="sidebar">
-      <Link className="wordmark sidebar-brand" to="/">catuni<span>materna · ao teu ritmo</span></Link>
+      <Link className="wordmark sidebar-brand" to="/">Apoio à Gravidez<span>AO TEU RITMO</span></Link>
       <nav className="main-nav" aria-label="Navegação principal">{items.map(({ to, label, icon:Icon }) =>
         <Link key={to} to={to} aria-current={pathname === to || to === '/community' && pathname === '/chat' ? 'page' : undefined}><Icon size={21} strokeWidth={1.7} /><span>{label}</span></Link>
       )}</nav>
     </aside>
     <div className="app-main">
-      <header className="app-header"><Link className="wordmark" to="/">catuni materna<span>AO TEU RITMO</span></Link>
+      <header className="app-header"><Link className="wordmark" to="/">Apoio à Gravidez<span>AO TEU RITMO</span></Link>
         <div className="cluster"><span className="pill">Demo académica</span><Link to="/profile" className="avatar" aria-label="O meu perfil"><UserRound size={20}/></Link></div>
       </header>
       <main id="content" tabIndex={-1} className="page-wrap" key={pathname}>
@@ -32,6 +32,3 @@ export function AppLayout() {
     </div>
   </div>;
 }
-
-
-

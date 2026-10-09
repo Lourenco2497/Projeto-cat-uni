@@ -1,4 +1,4 @@
-// Tipos de dados centrais da aplicação CatUni Materna
+﻿// Tipos de dados centrais da aplicação Apoio à Gravidez
 
 export type Trimester = 1 | 2 | 3;
 
