@@ -14,7 +14,7 @@ export const DEFAULT_DEMO_USER: UserProfile = {
   previousBirths: 0,
   isFirstPregnancy: true,
   previousActivityLevel: 'moderate',
-  complaints: ['dor lombar', 'cansaço', 'pernas pesadas'],
+  complaints: [],
   clinicalFlags: [], // Gravidez sem contraindicações
   goals: ['Aliviar dor lombar e rigidez', 'Fortalecer o pavimento pélvico', 'Manter mobilidade para o parto'],
   profileType: 'suave',

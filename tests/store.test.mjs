@@ -5,7 +5,7 @@ import { renderToString } from 'react-dom/server';
 import { AppProvider } from '../src/store/AppContext.tsx';
 import { useApp } from '../src/store/useApp.ts';
 import { DEFAULT_DEMO_USER } from '../src/data/demoData.ts';
-import { emptyDemo, STORAGE_KEY } from '../src/lib/persistence.ts';
+import { emptyDemo, loadDemo, STORAGE_KEY } from '../src/lib/persistence.ts';
 import { addDays } from '../src/lib/dates.ts';
 import { generatePersonalizedPlan, getExerciseForDay } from '../src/lib/planGenerator.ts';
 
@@ -92,4 +92,17 @@ for (const action of ['logout', 'new profile', 'reset']) {
     assert.deepEqual(saved(), before);
   });
 }
+
+test('physiotherapist chat replies in its own conversation and survives reload', t => {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  const { api, saved } = captureStore(t);
+  api.sendChatMessage('room-fisio', 'Olá, quero preparar a avaliação fictícia.');
+  t.mock.timers.tick(1500);
+  const messages = saved().chatMessages['room-fisio'];
+  assert.equal(messages.length, 2);
+  assert.match(messages[1].senderName, /Fisioterapeuta/);
+  assert.equal(saved().chatMessages['room-3trim'], undefined);
+  const reloaded = loadDemo({ getItem: key => key === STORAGE_KEY ? JSON.stringify(saved()) : null });
+  assert.deepEqual(reloaded.data.chatMessages['room-fisio'], messages);
+});
 

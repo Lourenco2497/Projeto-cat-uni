@@ -5,6 +5,20 @@ import { normalizeProfile, normalizeLog, loadDemo, STORAGE_KEY } from '../src/li
 import { DEFAULT_DEMO_USER } from '../src/data/demoData.ts';
 
 const storage = entries => ({ getItem: key => entries[key] ?? null });
+test('pregnancy notes and simulated appointments survive profile normalization', () => {
+  for (const mode of ['in-person', 'teams']) {
+    const fields = { currentPregnancyNotes: 'Nota atual fictícia', previousPregnancyNotes: 'Nota anterior fictícia', physiotherapyAssessment: { mode, date: '2026-11-12', time: '10:30' } };
+    const normalized = normalizeProfile({ ...DEFAULT_DEMO_USER, isFirstPregnancy: false, ...fields });
+    for (const key of Object.keys(fields)) assert.deepEqual(normalized[key], fields[key]);
+  }
+});
+
+test('invalid appointments and oversized pregnancy notes are rejected', () => {
+  for (const appointment of [{ mode: 'other', date: '2026-11-12', time: '10:30' }, { mode: 'teams', date: '2026-02-30', time: '10:30' }, { mode: 'teams', date: '2026-11-12', time: '25:00' }]) {
+    assert.equal(normalizeProfile({ ...DEFAULT_DEMO_USER, physiotherapyAssessment: appointment }), null);
+  }
+  assert.equal(normalizeProfile({ ...DEFAULT_DEMO_USER, currentPregnancyNotes: 'a'.repeat(1001) }), null);
+});
 test('Lisbon midnight uses the local day, including summer time', () => {
   assert.equal(todayKey(new Date('2026-07-01T23:30:00Z')), '2026-07-02');
   assert.equal(addDays('2026-03-29', -1), '2026-03-28');

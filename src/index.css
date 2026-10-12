@@ -20,9 +20,9 @@ h3 { font-size:1.05rem; font-weight:650; }
 p { line-height:1.65; }
 svg { flex-shrink:0; }
 label { display:block; font-weight:600; font-size:.88rem; margin-bottom:.5rem; }
-input:not([type=checkbox]):not([type=range]),select,textarea { width:100%; min-height:48px; border:1px solid var(--line); background:#fffcfb; color:var(--ink); padding:12px 14px; border-radius:14px; }
+input:not([type=checkbox]):not([type=radio]):not([type=range]),select,textarea { width:100%; min-height:48px; border:1px solid var(--line); background:#fffcfb; color:var(--ink); padding:12px 14px; border-radius:14px; }
 textarea { resize:vertical; }
-input[type=checkbox] { width:20px; height:20px; accent-color:var(--plum); }
+input[type=checkbox],input[type=radio] { width:20px; height:20px; accent-color:var(--plum); }
 input[type=range] { width:100%; accent-color:var(--plum); min-height:44px; }
 fieldset { border:0; margin:0; padding:0; }
 legend { font-weight:650; margin-bottom:12px; }
@@ -93,6 +93,7 @@ legend { font-weight:650; margin-bottom:12px; }
 .auth-illustration { max-width:380px; margin:24px auto 0; background:#ffe0d0; border-radius:50% 50% 22px 22px; padding:16px; }
 .auth-illustration svg { height:170px; width:100%; }
 .form-card { max-width:500px; width:100%; justify-self:center; }
+.form-card > .split:last-child { flex-wrap:wrap; }
 .step-track { display:flex; gap:6px; }
 .step-track span { flex:1; height:5px; background:var(--line); border-radius:10px; }
 .step-track .active { background:var(--plum); }

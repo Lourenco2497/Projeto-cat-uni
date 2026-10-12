@@ -16,10 +16,13 @@ export interface UserProfile {
   safetyScreening?: 'clear' | 'flagged' | 'unknown';
   perinealAwareness?: 'yes' | 'no' | 'unknown';
   previousBirths?: number;
+  currentPregnancyNotes?: string;
+  previousPregnancyNotes?: string;
+  physiotherapyAssessment?: { mode: 'in-person' | 'teams'; date: string; time: string };
   trimester: Trimester;
   isFirstPregnancy: boolean;
   previousActivityLevel: ActivityLevel;
-  complaints: string[]; // Queixas atuais (dor lombar, edemas, etc.)
+  complaints: string[]; // Sintomatologia atual
   clinicalFlags: string[]; // Fatores de risco / contraindicações
   goals: string[]; // Objetivos principais
   profileType: ProfileType;

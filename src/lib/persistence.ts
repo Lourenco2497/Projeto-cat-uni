@@ -21,6 +21,12 @@ export function normalizeProfile(value: unknown): UserProfile | null {
       !['sedentary', 'light', 'moderate', 'high'].includes(String(value.previousActivityLevel)) ||
       !strings(value.complaints) || !strings(value.clinicalFlags) || !strings(value.goals)) return null;
   const days = value.gestationalDays ?? 0, births = value.previousBirths ?? 0;
+  if (value.currentPregnancyNotes != null && !text(value.currentPregnancyNotes, 1000) ||
+      value.previousPregnancyNotes != null && !text(value.previousPregnancyNotes, 1000)) return null;
+  const assessment = value.physiotherapyAssessment;
+  if (assessment != null && (!record(assessment) || !['in-person', 'teams'].includes(String(assessment.mode)) ||
+      typeof assessment.date !== 'string' || !validDate(assessment.date) ||
+      typeof assessment.time !== 'string' || !/^([01]\d|2[0-3]):[0-5]\d$/.test(assessment.time))) return null;
   if (!Number.isInteger(days) || Number(days) < 0 || Number(days) > 6 || !Number.isInteger(births) || Number(births) < 0 || Number(births) > 20) return null;
   const pregnancyType = value.pregnancyType ?? 'unknown', fetalPresentation = value.fetalPresentation ?? 'unknown';
   const safetyScreening = value.safetyScreening ?? 'unknown', perinealAwareness = value.perinealAwareness ?? 'unknown';
@@ -33,6 +39,9 @@ export function normalizeProfile(value: unknown): UserProfile | null {
     pregnancyType: pregnancyType as UserProfile['pregnancyType'], fetalPresentation: fetalPresentation as UserProfile['fetalPresentation'],
     safetyScreening: value.clinicalFlags.length ? 'flagged' : safetyScreening as UserProfile['safetyScreening'],
     perinealAwareness: perinealAwareness as UserProfile['perinealAwareness'],
+    currentPregnancyNotes: value.currentPregnancyNotes as string | undefined,
+    previousPregnancyNotes: value.isFirstPregnancy ? undefined : value.previousPregnancyNotes as string | undefined,
+    physiotherapyAssessment: assessment == null ? undefined : { mode: (assessment as Record<string, unknown>).mode as 'in-person' | 'teams', date: (assessment as Record<string, unknown>).date as string, time: (assessment as Record<string, unknown>).time as string },
     profileType: value.profileType === 'moderado' ? 'moderado' : value.profileType === 'conservador' ? 'conservador' : 'suave',
     planId: text(value.planId, 100) ? value.planId : 'demo',
   };

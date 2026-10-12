@@ -7,6 +7,20 @@ import { EXERCISES } from '../src/data/exercises.ts';
 const profile = { week: 34, isFirstPregnancy: true, previousActivityLevel: 'light', complaints: [], clinicalFlags: [], goals: [], safetyScreening: 'clear' };
 const log = (date, extra = {}) => ({ date, completed: true, exerciseId: 'ex-1', symptoms: [], contractions: 'nenhuma', actualReps: null, actualSets: null, painLevel: null, difficultyLevel: null, loggedAt: '2026-10-08T12:00:00Z', ...extra });
 
+test('each of the first four current conditions suspends all suggestions', () => {
+  for (const condition of ['Rotura prematura de membranas', 'Placenta prévia após 28 semanas', 'Pré-eclâmpsia/hipertensão gestacional grave', 'Colo do útero curto']) {
+    const plan = generatePersonalizedPlan({ ...profile, complaints: [condition] });
+    assert.deepEqual(plan.recommendedDailyExercises, [], condition);
+    assert.ok(plan.clinicalSafetyAlert, condition);
+  }
+});
+
+test('the remaining current conditions do not automatically suspend suggestions', () => {
+  for (const condition of ['Sangramento vaginal inexplicado', 'Anemia sintomática *', 'Arritmias maternas *', 'Obesidade ou baixo peso sem acompanhamento *', 'Restrição crescimento intra-uterino *']) {
+    assert.equal(generatePersonalizedPlan({ ...profile, complaints: [condition] }).recommendedDailyExercises.length, 7, condition);
+  }
+});
+
 test('contraindications suspend every exercise recommendation', () => {
   const plan = generatePersonalizedPlan({ ...profile, clinicalFlags: ['sangramento'] });
   assert.equal(plan.recommendedDailyExercises.length, 0);

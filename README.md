@@ -63,9 +63,11 @@ React, TypeScript, Vite, Tailwind, React Router, Lucide e Recharts foram reutili
 
 Os formulários, filtros e diálogos usam estado local. O Context mantém apenas os dados partilhados. A seleção do dia é transitória; os registos são guardados por data.
 
-A avaliação recolhe semanas + dias, tipo de gravidez, apresentação fetal, história obstétrica, atividade, consciência perineal, queixas, condições reportadas e objetivos. Estes campos ilustram o fluxo; não formam um motor clínico validado. Condições reportadas ou avaliação por esclarecer suspendem sugestões, sem uma prescrição alternativa. O registo de sintomas continua disponível.
+A avaliação recolhe semanas + dias, tipo de gravidez, apresentação fetal, história obstétrica, notas opcionais sobre a gravidez atual e anteriores, atividade, sintomatologia atual e objetivos. As primeiras quatro condições da lista suspendem todas as sugestões. As restantes cinco não suspendem automaticamente. Estes campos e regras ilustram o fluxo; não formam um motor clínico validado. O registo de sintomas continua disponível. Perfis antigos com condições ou avaliação por esclarecer mantêm a suspensão até à revisão da avaliação.
 
-Os guias mostram ilustrações e passos reais de navegação, com parâmetros de exemplo. Os vídeos aguardam conteúdo aprovado. Artigos não apresentam estudos ou resultados inventados. Exames têm apenas uma pré-visualização fictícia de campos futuros.
+O passo «Avaliação c/fisio» permite escolher uma marcação presencial ou online via Microsoft Teams, com data e hora guardadas no perfil. A marcação é simulada: não reserva consultas nem cria reuniões. O chat com fisioterapeuta usa uma conversa local separada, com respostas automáticas de uma profissional fictícia. No calendário, «Enviar relatório para o fisioterapeuta» apresenta o último registo guardado do dia e confirma um envio simulado. «Enviar anexo», em Exames e acompanhamento, abre o seletor de ficheiros e confirma a simulação; o conteúdo do ficheiro não é lido, enviado ou guardado.
+
+Os guias mostram ilustrações e passos reais de navegação, com parâmetros de exemplo. Os vídeos aguardam conteúdo aprovado. Artigos não apresentam estudos ou resultados inventados.
 
 Conclusão rápida não cria valores de dor, esforço, séries ou repetições. Um alerta registado suspende a conclusão; datas futuras não aceitam registos. Mudar a avaliação preserva as conclusões anteriores e os IDs do histórico; um exercício excluído não recebe um substituto nem um guia. Dor média ignora medições ausentes. Os gráficos usam períodos reais e deixam lacunas sem valores. Não atribuem alterações à eficácia do exercício.
 
@@ -81,14 +83,14 @@ As respostas do chat são automáticas e locais. Os temporizadores pendentes sã
 6. Em **Aprender**, pesquisar, guardar um tema e abrir o rascunho. Mostrar a indicação de fontes pendentes.
 7. Em **Comunidade**, abrir uma história fictícia e uma conversa; enviar apenas uma mensagem fictícia e mostrar a resposta automática.
 8. Em **Perfil**, mostrar a avaliação, a edição e a proposta de acompanhamento/exames.
-9. Para demonstrar o estado suspenso, editar a avaliação e selecionar um exemplo por esclarecer ou com restrição. Mostrar o registo diário disponível sem conclusão de exercício.
+9. Para demonstrar o estado suspenso, editar a avaliação e selecionar uma das primeiras quatro opções de Sintomatologia atual. Mostrar o registo diário disponível sem conclusão de exercício.
 10. Repor o exemplo em Perfil antes da apresentação seguinte.
 
 Para mostrar o estado vazio, sair e criar um perfil fictício novo. Para apresentar sem internet, testar previamente todas as páginas com o servidor local disponível. Não existe instalação offline/PWA nem promessa de carregamento inicial offline.
 
 ## Verificação e limites
 
-24 testes nativos cobrem exclusões e seleção, catálogos limitado/vazio, intervalos estatísticos, medições ausentes, lacunas no gráfico, datas em Lisboa, recuperação do formato antigo, armazenamento corrompido, validação de campos e identidade histórica dos exercícios. Uma inversão deliberada da condição de avaliação fez falhar os testes e foi revertida.
+29 testes nativos cobrem a suspensão pelas primeiras quatro condições, as restantes condições, persistência e validação das notas/marcações, conversa com fisioterapeuta, exclusões e seleção, catálogos limitado/vazio, intervalos estatísticos, medições ausentes, lacunas no gráfico, datas em Lisboa, recuperação do formato antigo, armazenamento corrompido, validação de campos e identidade histórica dos exercícios.
 
 Typecheck, lint TS/TSX e build passam. O pacote inicial de produção ficou perto de 349 kB antes de gzip; Recharts está num pacote separado. A atualização específica de `source-map-js` para 1.2.2 corrigiu o alerta identificado no [aviso do mantenedor](https://github.com/7rulnik/source-map-js/releases/tag/v1.2.2); a auditoria posterior não reportou vulnerabilidades conhecidas.
 

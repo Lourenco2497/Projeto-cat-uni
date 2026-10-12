@@ -1,11 +1,12 @@
 ﻿import { useState } from 'react';
-import { ChevronLeft, ChevronRight, ArrowUpRight, Check } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ArrowUpRight, Check, Send } from 'lucide-react';
 import { useApp } from '../store/useApp';
 import { addDays, dateValue, formatDate } from '../lib/dates';
 import { isAlarm } from '../lib/persistence';
 import { EXERCISES } from '../data/exercises';
 import type { Exercise, WorkoutLog } from '../types';
 import { DemonstrationModal } from '../components/ui/DemonstrationModal';
+import { Dialog } from '../components/ui/Dialog';
 
 const symptomChoices = ['dor lombar', 'dor pélvica', 'edemas', 'fadiga', 'perdas de sangue ou líquido', 'tonturas ou falta de ar'];
 export function CalendarPage() {
@@ -37,6 +38,9 @@ function DailyRecord({ date, exercise }: { date: string; exercise: Exercise | nu
     contractions: 'nenhuma', actualReps: null, actualSets: null, notes: '', loggedAt: new Date().toISOString(),
   });
   const [status, setStatus] = useState('');
+  const [reportOpen, setReportOpen] = useState(false);
+  const [reportStatus, setReportStatus] = useState('');
+  const savedRecord = workoutLogs[date];
   const future = date > todayDateStr;
   const alarm = isAlarm(draft);
   const blocked = !exercise || !!activePlan.clinicalSafetyAlert || alarm;
@@ -46,7 +50,7 @@ function DailyRecord({ date, exercise }: { date: string; exercise: Exercise | nu
     const saved = saveWorkoutLog({ ...draft, exerciseId: exercise?.id ?? draft.exerciseId, completed: !alarm && draft.completed, loggedAt: new Date().toISOString() });
     setStatus(saved ? 'Registo guardado para ' + formatDate(date) + '.' : 'Não foi possível guardar. Revê os campos do registo.');
   }
-  return <form className="card stack" onSubmit={submit}><h2>Como te sentiste?</h2><p className="small muted">Cada data tem o seu registo. Guarda antes de escolher outro dia.</p>
+  return <><form className="card stack" onSubmit={submit}><h2>Como te sentiste?</h2><p className="small muted">Cada data tem o seu registo. Guarda antes de escolher outro dia.</p>
     {future && <p className="callout neutral">Esta data está no futuro. Os registos ficam disponíveis nesse dia.</p>}
     <fieldset disabled={future} className="stack">
       <fieldset><legend>Sintomas (opcional)</legend><div className="chips">{symptomChoices.map(symptom => <button type="button" className="chip" key={symptom} aria-pressed={draft.symptoms.includes(symptom)} onClick={() => update('symptoms', draft.symptoms.includes(symptom) ? draft.symptoms.filter(s => s !== symptom) : [...draft.symptoms, symptom])}>{symptom}</button>)}</div></fieldset>
@@ -58,9 +62,14 @@ function DailyRecord({ date, exercise }: { date: string; exercise: Exercise | nu
       <label className="check-row"><input type="checkbox" disabled={blocked} checked={!alarm && draft.completed} onChange={e => update('completed', e.target.checked)} />Concluí o exercício deste dia</label>
       {blocked && <p className="small muted">Podes guardar sintomas. Novas conclusões estão suspensas.{!alarm && draft.completed ? ' A conclusão anterior é mantida no histórico.' : ''}</p>}
       <button className="primary full" type="submit">Guardar registo do dia <Check size={18} /></button>
+      <button className="secondary full" type="button" disabled={!savedRecord} onClick={() => { setReportStatus(''); setReportOpen(true); }}>Enviar relatório para o fisioterapeuta <Send size={18} /></button>
+      <p className="small muted">O envio é simulado e usa o último registo guardado deste dia.</p>
     </fieldset>
     {status && <p className="callout" role="status">{status}</p>}
-  </form>;
+    {reportStatus && <p className="callout neutral" role="status">{reportStatus}</p>}
+  </form>
+    {reportOpen && savedRecord && <Dialog title="Relatório para o fisioterapeuta" onClose={() => setReportOpen(false)}><div className="stack"><p className="eyebrow">{formatDate(date)}</p><dl className="stack"><div><dt>Exercício</dt><dd>{EXERCISES.find(item => item.id === savedRecord.exerciseId)?.name ?? 'Sem exercício'} · {savedRecord.completed ? 'Concluído' : 'Não concluído'}</dd></div><div><dt>Sintomas</dt><dd>{savedRecord.symptoms.join(', ') || 'Nenhum selecionado'}</dd></div><div><dt>Dor / esforço</dt><dd>{savedRecord.painLevel ?? 'Não registado'} / {savedRecord.difficultyLevel ?? 'Não registado'}</dd></div><div><dt>Contrações</dt><dd>{savedRecord.contractions}</dd></div><div><dt>Repetições / séries</dt><dd>{savedRecord.actualReps ?? 'Não registado'} / {savedRecord.actualSets ?? 'Não registado'}</dd></div><div><dt>Nota do dia</dt><dd>{savedRecord.notes || 'Não preenchida'}</dd></div></dl><p className="callout neutral">Este relatório é uma simulação. Não será enviado a uma pessoa real.</p><button type="button" className="primary full" onClick={() => { setReportOpen(false); setReportStatus('Envio do relatório de ' + formatDate(date) + ' para o fisioterapeuta simulado com sucesso.'); }}>Simular envio <Send size={18} /></button></div></Dialog>}
+  </>;
 }
 
 

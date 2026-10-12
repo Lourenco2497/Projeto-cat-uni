@@ -1,5 +1,6 @@
 ﻿import type { ActivityLevel, ProfileType, UserProfile, Trimester } from '../types';
 import { EXERCISES } from '../data/exercises';
+import { SUSPENDING_SYMPTOMS } from '../data/currentSymptoms';
 import { trimesterFor, validDate, dateValue } from './dates';
 
 export interface PlanGenerationInput {
@@ -13,7 +14,7 @@ export interface GeneratedPlanResult {
   weeklyAdvice: string;
 }
 export function generatePersonalizedPlan(input: PlanGenerationInput): GeneratedPlanResult {
-  const blocked = input.clinicalFlags.length > 0 || input.safetyScreening !== 'clear' || !Number.isInteger(input.week) || input.week < 1 || input.week > 42;
+  const blocked = input.complaints.some(item => SUSPENDING_SYMPTOMS.includes(item)) || input.clinicalFlags.length > 0 || input.safetyScreening !== 'clear' || !Number.isInteger(input.week) || input.week < 1 || input.week > 42;
   const candidates = blocked ? [] : EXERCISES.filter(e => e.suitableTrimesters.includes(trimesterFor(input.week)));
   const priority = input.complaints.includes('dor lombar') ? 'ex-4' : input.complaints.includes('edemas') ? 'ex-7' : 'ex-1';
   candidates.sort((a, b) => Number(b.id === priority) - Number(a.id === priority));

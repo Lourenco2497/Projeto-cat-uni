@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import type { UserProfile, WorkoutLog } from '../types';
 import { AppContext } from './useApp';
 import { DEFAULT_DEMO_USER, generateDemoWorkoutLogs } from '../data/demoData';
-import { CHAT_ROOMS, INITIAL_CHAT_MESSAGES, SIMULATED_REPLIES } from '../data/chatData';
+import { CHAT_ROOMS, INITIAL_CHAT_MESSAGES, SIMULATED_REPLIES, PHYSIOTHERAPIST_REPLIES } from '../data/chatData';
 import { ARTICLES } from '../data/articles';
 
 import { generatePersonalizedPlan, getExerciseForDay } from '../lib/planGenerator';
@@ -82,7 +82,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     commit({ ...state.current, chatMessages: { ...state.current.chatMessages, [roomId]: [...(state.current.chatMessages[roomId] || []), message].slice(-200) } });
     const timer = setTimeout(() => {
       timers.current = timers.current.filter(t => t !== timer);
-      const reply = { ...message, id: crypto.randomUUID(), senderName: 'Cláudia · exemplo', avatarSeed: 'Claudia', text: SIMULATED_REPLIES[Math.floor(Math.random() * SIMULATED_REPLIES.length)], isCurrentUser: false };
+      const replies = roomId === 'room-fisio' ? PHYSIOTHERAPIST_REPLIES : SIMULATED_REPLIES;
+      const reply = { ...message, id: crypto.randomUUID(), senderName: roomId === 'room-fisio' ? 'Fisioterapeuta Sofia' : 'Cláudia · exemplo', avatarSeed: roomId === 'room-fisio' ? 'Sofia' : 'Claudia', text: replies[Math.floor(Math.random() * replies.length)], isCurrentUser: false };
       commit({ ...state.current, chatMessages: { ...state.current.chatMessages, [roomId]: [...(state.current.chatMessages[roomId] || []), reply].slice(-200) } });
     }, 1500);
     timers.current.push(timer);
