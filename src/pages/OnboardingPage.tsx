@@ -9,26 +9,31 @@ import type { UserProfile } from '../types';
 
 const titles = ['A tua gravidez', 'História e movimento', 'Sintomatologia atual', 'Avaliação c/fisio', 'O teu acompanhamento'];
 const goals = ['Conhecer o meu corpo', 'Acompanhar o meu conforto', 'Criar uma rotina', 'Preparar perguntas para a consulta'];
+type ProfileDraft = Omit<UserProfile, 'week' | 'gestationalDays' | 'previousBirths'> & {
+  week: string; gestationalDays: string; previousBirths: string;
+};
 
 export function OnboardingPage() {
   const { user, completeOnboarding, hasCompletedOnboarding } = useApp();
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
-  const [profile, setProfile] = useState<UserProfile>({ ...user, clinicalFlags: [], safetyScreening: 'clear' });
+  const [profile, setProfile] = useState<ProfileDraft>({ ...user, clinicalFlags: [], safetyScreening: 'clear',
+    week: String(user.week), gestationalDays: String(user.gestationalDays ?? 0), previousBirths: String(user.previousBirths ?? 0) });
   const [error, setError] = useState('');
   const suspended = profile.complaints.some(item => SUSPENDING_SYMPTOMS.includes(item));
-  const plan = generatePersonalizedPlan(profile);
+  const numericProfile: UserProfile = { ...profile, week: Number(profile.week), gestationalDays: Number(profile.gestationalDays), previousBirths: Number(profile.previousBirths) };
+  const plan = generatePersonalizedPlan(numericProfile);
   function updateAssessment(key: 'date' | 'time', value: string) {
     setProfile(p => ({ ...p, physiotherapyAssessment: p.physiotherapyAssessment ? { ...p.physiotherapyAssessment, [key]: value } : undefined }));
   }
-  function update<K extends keyof UserProfile>(key: K, value: UserProfile[K]) { setProfile(p => ({ ...p, [key]: value })); }
+  function update<K extends keyof ProfileDraft>(key: K, value: ProfileDraft[K]) { setProfile(p => ({ ...p, [key]: value })); }
   function toggle(key: 'complaints' | 'goals', item: string) {
     setProfile(p => ({ ...p, [key]: p[key].includes(item) ? p[key].filter(v => v !== item) : [...p[key], item] }));
   }
   function submit(e: React.FormEvent) {
     e.preventDefault();
     if (step < 4) { setStep(step + 1); return; }
-    if (completeOnboarding({ ...profile, safetyScreening: suspended ? 'flagged' : 'clear', trimester: trimesterFor(profile.week), profileType: plan.profileType, planId: 'demo-t' + trimesterFor(profile.week) })) navigate('/');
+    if (completeOnboarding({ ...numericProfile, safetyScreening: suspended ? 'flagged' : 'clear', trimester: trimesterFor(numericProfile.week), profileType: plan.profileType, planId: 'demo-t' + trimesterFor(numericProfile.week) })) navigate('/');
     else setError('Revê os campos da avaliação antes de guardar.');
   }
   return <main className="auth-shell"><form className="card form-card stack" onSubmit={submit}>
@@ -36,14 +41,14 @@ export function OnboardingPage() {
     <div className="step-track" aria-hidden="true">{titles.map((title, i) => <span key={title} className={i <= step ? 'active' : ''} />)}</div>
     <header key={step} aria-live="polite"><p className="eyebrow">Passo {step + 1} de 5</p><h1 style={{ marginTop: 10 }}>{titles[step]}</h1><p className="muted small" style={{ marginTop: 10 }}>Usa respostas fictícias nesta demonstração académica.</p></header>
     {step === 0 && <>
-      <div className="grid-2"><div><label htmlFor="weeks">Semanas</label><input id="weeks" type="number" min="1" max="42" required value={profile.week} onChange={e => update('week', Number(e.target.value))} /></div>
-      <div><label htmlFor="days">Dias</label><input id="days" type="number" min="0" max="6" required value={profile.gestationalDays ?? 0} onChange={e => update('gestationalDays', Number(e.target.value))} /></div></div>
+      <div className="grid-2"><div><label htmlFor="weeks">Semanas</label><input id="weeks" type="number" min="1" max="42" required value={profile.week} onChange={e => update('week', e.target.value)} /></div>
+      <div><label htmlFor="days">Dias</label><input id="days" type="number" min="0" max="6" required value={profile.gestationalDays} onChange={e => update('gestationalDays', e.target.value)} /></div></div>
       <div><label htmlFor="pregnancy">Tipo de gravidez</label><select id="pregnancy" value={profile.pregnancyType ?? 'unknown'} onChange={e => update('pregnancyType', e.target.value as UserProfile['pregnancyType'])}><option value="unknown">Não sei / por confirmar</option><option value="single">Um bebé</option><option value="twins">Gémeos</option></select></div>
       <div><label htmlFor="presentation">Apresentação do bebé</label><select id="presentation" value={profile.fetalPresentation ?? 'unknown'} onChange={e => update('fetalPresentation', e.target.value as UserProfile['fetalPresentation'])}><option value="unknown">Não sei / por confirmar</option><option value="cephalic">Cefálica</option><option value="breech">Pélvica</option><option value="transverse">Transversa</option></select></div>
     </>}
     {step === 1 && <>
-      <label className="check-row"><input type="checkbox" checked={profile.isFirstPregnancy} onChange={e => setProfile(p => ({ ...p, isFirstPregnancy: e.target.checked, previousBirths: e.target.checked ? 0 : p.previousBirths }))} />Esta é a minha primeira gravidez</label>
-      {!profile.isFirstPregnancy && <div><label htmlFor="births">Partos anteriores</label><input id="births" type="number" min="0" max="20" required value={profile.previousBirths ?? 0} onChange={e => update('previousBirths', Number(e.target.value))} /></div>}
+      <label className="check-row"><input type="checkbox" checked={profile.isFirstPregnancy} onChange={e => setProfile(p => ({ ...p, isFirstPregnancy: e.target.checked, previousBirths: e.target.checked ? '0' : p.previousBirths }))} />Esta é a minha primeira gravidez</label>
+      {!profile.isFirstPregnancy && <div><label htmlFor="births">Partos anteriores</label><input id="births" type="number" min="0" max="20" required value={profile.previousBirths} onChange={e => update('previousBirths', e.target.value)} /></div>}
       {!profile.isFirstPregnancy && <div><label htmlFor="previous-pregnancy-notes">Existiu algum aspeto importante na(s) gravidez(es) anterior(es)? (opcional)</label><textarea id="previous-pregnancy-notes" rows={3} maxLength={1000} value={profile.previousPregnancyNotes ?? ''} onChange={e => update('previousPregnancyNotes', e.target.value)} /></div>}
       <div><label htmlFor="current-pregnancy-notes">Existe algum aspeto importante nesta gravidez? (opcional)</label><textarea id="current-pregnancy-notes" rows={3} maxLength={1000} value={profile.currentPregnancyNotes ?? ''} onChange={e => update('currentPregnancyNotes', e.target.value)} /></div>
       <div><label htmlFor="activity">Atividade antes da gravidez</label><select id="activity" value={profile.previousActivityLevel} onChange={e => update('previousActivityLevel', e.target.value as UserProfile['previousActivityLevel'])}><option value="sedentary">Pouco movimento</option><option value="light">Atividade leve</option><option value="moderate">Atividade moderada</option><option value="high">Atividade frequente</option></select></div>
